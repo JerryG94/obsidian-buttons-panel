@@ -1,0 +1,26 @@
+{
+	"name": "obsidian-buttons-panel",
+	"version": "0.1.0",
+	"description": "Render a compact Buttons-powered Markdown panel in the Obsidian sidebar.",
+	"main": "main.js",
+	"type": "module",
+	"scripts": {
+		"dev": "node esbuild.config.mjs",
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"test": "vitest run --passWithNoTests",
+		"test:watch": "vitest"
+	},
+	"keywords": ["obsidian", "obsidian-plugin", "buttons", "sidebar"],
+	"author": "JerryG",
+	"license": "MIT",
+	"devDependencies": {
+		"@types/node": "^20.0.0",
+		"builtin-modules": "^4.0.0",
+		"esbuild": "^0.20.0",
+		"obsidian": "^1.5.0",
+		"tslib": "^2.6.0",
+		"typescript": "^5.4.0",
+		"vitest": "^1.4.0"
+	}
+}

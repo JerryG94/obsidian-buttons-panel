@@ -1,7 +1,7 @@
 node_modules/
-main.js
-styles.css
-data.json
+/main.js
+/styles.css
+/data.json
 *.local.*
 .env.local
 .DS_Store
