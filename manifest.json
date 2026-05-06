@@ -1,0 +1,10 @@
+{
+	"id": "buttons-panel",
+	"name": "Buttons Panel",
+	"version": "0.1.0",
+	"minAppVersion": "1.5.0",
+	"description": "Render a compact Buttons-powered Markdown panel in the Obsidian sidebar.",
+	"author": "JerryG",
+	"authorUrl": "https://github.com/JerryG94",
+	"isDesktopOnly": true
+}
