@@ -61,14 +61,15 @@ export async function saveSettings(plugin: Plugin & { settings: ButtonsPanelSett
 	await plugin.saveData(plugin.settings);
 }
 
-function mergeDefaults<T>(defaults: T, loaded: Partial<T>): T {
+export function mergeDefaults<T>(defaults: T, loaded: Partial<T>): T {
 	const out: Record<string, unknown> = (Array.isArray(defaults) ? [] : { ...(defaults as object) }) as Record<string, unknown>;
 	for (const key of Object.keys(loaded ?? {})) {
 		const dv = (defaults as Record<string, unknown>)[key];
 		const lv = (loaded as Record<string, unknown>)[key];
-		if (dv && typeof dv === 'object' && !Array.isArray(dv) && lv && typeof lv === 'object') {
+		if (lv === null || lv === undefined) continue;
+		if (dv && typeof dv === 'object' && !Array.isArray(dv) && typeof lv === 'object' && !Array.isArray(lv)) {
 			out[key] = mergeDefaults(dv as object, lv as object);
-		} else if (lv !== undefined) {
+		} else {
 			out[key] = lv;
 		}
 	}
