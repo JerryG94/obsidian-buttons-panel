@@ -1408,12 +1408,115 @@ git commit -m "feat(renderer): markdown render + error/banner cards"
 
 ---
 
+### Task M2.10b：ActiveLeafBridge —— Focus-Dance Bridge 实现
+
+> **背景：** Stage 0 spike 发现 Buttons 插件 v0.9.13 的 inline-button click 路径硬依赖 `app.workspace.getActiveViewOfType(MarkdownView)`，自定义 ItemView 不满足该条件 → 抛 "Could not get Active View" → 命令永不 dispatch。设计文档 §11.4 Plan C 给出的解法：在 click 触达 Buttons 插件 handler 之前，capture-phase 主动把 active leaf 切到主区最近的 MarkdownView。完整背景见 [`docs/spike-stage-0-report.md`](../../spike-stage-0-report.md)。
+
+**文件：**
+- 新建：`src/active-leaf-bridge.ts`
+- 修改：`src/i18n/en.ts`、`src/i18n/zh.ts`（新增 `error.NO_MAIN_MARKDOWN_VIEW` 与 `error.NO_MAIN_MARKDOWN_VIEW.title`）
+
+- [ ] **Step 1：i18n 加新 key**
+
+`src/i18n/en.ts` 在 `error` 命名空间下加：
+
+```ts
+NO_MAIN_MARKDOWN_VIEW: 'Open a Markdown file in the main pane first — Buttons Panel commands act on the active main-pane file.',
+```
+
+`src/i18n/zh.ts` 同步加：
+
+```ts
+NO_MAIN_MARKDOWN_VIEW: '请先在主编辑区打开一个 Markdown 文件 —— Buttons Panel 的按钮命令作用于主区当前文件。',
+```
+
+> i18n key drift 测试（`tests/i18n.test.ts`）会自动校验 en/zh 同步。
+
+- [ ] **Step 2：写 `src/active-leaf-bridge.ts`**
+
+```ts
+import { App, Component, MarkdownView, Notice, WorkspaceLeaf } from 'obsidian';
+import { t } from './i18n';
+
+/**
+ * Focus-Dance Bridge：维护"主区最近一次 active 的 MarkdownView leaf"，
+ * 在 capture phase 拦截面板内的 click，把 active leaf 切回主区，
+ * 让 Buttons 插件后续的 bubble-phase listener 能拿到合法的 MarkdownView。
+ */
+export class ActiveLeafBridge {
+	private lastMainLeaf: WorkspaceLeaf | null = null;
+
+	constructor(private readonly app: App, private readonly host: Component) {}
+
+	/** 在 view onOpen 时调用：seed lastMainLeaf 并注册事件 */
+	attach(panelContentEl: HTMLElement): void {
+		this.seedFromExistingLeaves();
+
+		this.host.registerEvent(
+			this.app.workspace.on('active-leaf-change', (leaf) => {
+				if (leaf && this.isMainPaneMarkdownView(leaf)) {
+					this.lastMainLeaf = leaf;
+				}
+			}),
+		);
+
+		const handler = (evt: MouseEvent) => this.onCaptureClick(evt);
+		panelContentEl.addEventListener('click', handler, true);
+		this.host.register(() => panelContentEl.removeEventListener('click', handler, true));
+	}
+
+	private seedFromExistingLeaves(): void {
+		this.app.workspace.iterateAllLeaves((leaf) => {
+			if (this.lastMainLeaf) return;
+			if (this.isMainPaneMarkdownView(leaf)) this.lastMainLeaf = leaf;
+		});
+	}
+
+	private isMainPaneMarkdownView(leaf: WorkspaceLeaf): boolean {
+		return leaf.view instanceof MarkdownView && leaf.getRoot() === this.app.workspace.rootSplit;
+	}
+
+	private onCaptureClick(evt: MouseEvent): void {
+		const leaf = this.lastMainLeaf;
+		if (leaf && leaf.view instanceof MarkdownView && leaf.getRoot() === this.app.workspace.rootSplit) {
+			this.app.workspace.setActiveLeaf(leaf, { focus: false });
+			return;
+		}
+		// 主区没有 markdown view → 友好提示并阻断
+		new Notice(t('error.NO_MAIN_MARKDOWN_VIEW'));
+		evt.stopImmediatePropagation();
+		evt.preventDefault();
+	}
+}
+```
+
+- [ ] **Step 3：单元测试可选 / 留给 L3 手动验收**
+
+ActiveLeafBridge 强依赖 `app.workspace` / `MarkdownView` 等 Obsidian runtime API，L1 单元测试性价比低（与设计文档 §14.1 一致）。**不写 L1 测试**，改在 §14.4 手动验收清单 A 组新增一条：
+
+| # | 操作 | 预期 |
+|---|---|---|
+| A11 | 主区打开任意 markdown，sidebar 点面板 command 按钮 | 命令在主区文件上执行（主区无 markdown 时弹 Notice 提示） |
+
+> M3 阶段把 A11 写进真实清单（设计文档 §14.4），M2 阶段先记在本任务上。
+
+- [ ] **Step 4：commit**
+
+```bash
+git add src/active-leaf-bridge.ts src/i18n/en.ts src/i18n/zh.ts
+git commit -m "feat(bridge): focus-dance active-leaf bridge for buttons click path"
+```
+
+---
+
 ### Task M2.11：ButtonsPanelView
 
 **文件：**
 - 新建：`src/view.ts`
 
-- [ ] **Step 1：写 `src/view.ts`**（设计文档 §7.2、§6.2）
+> **新增要求（来自 spike 决策）：** 在 `onOpen` 末尾构造并 `attach` 一个 `ActiveLeafBridge`（来自 Task M2.10b）。Bridge 实例通过 `host = this`（ItemView 也是 Component）注册事件与清理 listener，View 关闭时自动随 Component 生命周期解绑。`Bridge.attach(this.contentEl)` 必须在 `await this.refresh()` **之前** 调用，确保首次渲染完成时 capture-phase listener 已就位。
+
+- [ ] **Step 1：写 `src/view.ts`**（设计文档 §7.2、§6.2、§11.4 Plan C）
 
 ```ts
 import { ItemView, WorkspaceLeaf } from 'obsidian';

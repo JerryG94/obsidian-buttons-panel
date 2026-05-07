@@ -1160,17 +1160,53 @@ action Open today's daily note
 | 2 | command 类按钮可点击 | 点击 "测试" 按钮，Obsidian 真的打开了今日 daily note |
 | 3 | block-id inline 引用 | 第二处 `` `button-test` `` 也渲染为同一个按钮（不是变成 inline code） |
 
-### 11.4 Spike 失败的应对路线
+### 11.4 Spike 验收结果与最终路线（2026-05-07 更新）
 
-| 失败项 | Plan B |
+**Stage 0 spike 已完成。** 完整记录见 [`docs/spike-stage-0-report.md`](../../spike-stage-0-report.md)（spike 分支 `experiments/spike-stage-0`）。三项验收全部通过，但 **#2 命令可点击仅在加入 Focus-Dance Bridge 后才通过**。
+
+#### 关键发现：Buttons 插件的 click 路径硬依赖 `MarkdownView`
+
+Plan A 的 baseline 实现（custom ItemView + `MarkdownRenderer.render`，无额外 hook）渲染层 100% 正常，但 click 层硬性失败。Buttons 插件 v0.9.13 源码路径：
+
+```text
+点击 inline 按钮
+  └── clickHandler → getInlineButtonPosition → createContentArray
+      └── app.workspace.getActiveViewOfType(MarkdownView)  ← 当 active 是 ItemView 时返回 null
+          ├── new Notice("Could not get Active View")
+          └── 返回 undefined → 上游 .map(...) 抛 TypeError → 命令永不 dispatch
+```
+
+inline button 路径**无条件**调用 `getInlineButtonPosition`，即使按钮是 `type command`（不依赖 buttonStart / position）也走这条路；所以 `type` 检查根本走不到。
+
+#### Plan C：Focus-Dance Bridge（v0.1 实际采用）
+
+**核心思路**：保留 Plan A 渲染骨架，在 click 触达 Buttons 插件 handler **之前**主动桥接 active leaf 到主区最近的 MarkdownView。
+
+实现要点：
+
+1. `ButtonsPanelView` 持有 `lastMainLeaf: WorkspaceLeaf | null`；
+2. `onOpen` 用 `iterateAllLeaves` 扫描已存在的主区 MarkdownView 作为 seed；
+3. `registerEvent('active-leaf-change')` 持续追踪主区 MarkdownView 切换；
+4. `contentEl.addEventListener('click', handler, true)` —— **capture phase**，早于 Buttons 插件的 bubble-phase listener；
+5. handler 中：若 `lastMainLeaf` 存在且仍是 MarkdownView → `setActiveLeaf(lastMainLeaf, { focus: false })`；否则弹 Notice `t('error.NO_MAIN_MARKDOWN_VIEW')` 并 `stopImmediatePropagation()` + `preventDefault()`。
+
+`isInMainPane` 判定：`leaf.getRoot() === app.workspace.rootSplit`。
+
+实测从 capture-phase listener 调用 `setActiveLeaf({ focus: false })` 后，Buttons 插件后续的 bubble-phase listener 同步看到了切换后的 active view —— 这是方案可行的关键前置假设，已在 spike 中验证。
+
+#### 备选路线（若后续发现 Plan C 不可持续）
+
+| 失败项 | Plan B（备选） |
 |---|---|
 | #1 渲染失败 | 改路线为"嵌入 MarkdownView"：用 `WorkspaceLeaf.openFile(file, { state: { mode: 'preview' } })` 代替自定义 ItemView，CSS 隔离改用 `:has` 配合自定义标记 |
-| #2 命令不可点击 | 调研 Buttons 插件源码看是否暴露 API；最坏情况通知用户：v0.1 不支持自定义 view 中的按钮动作 |
+| #2 命令不可点击 | （已被 Plan C 缓解）若 Plan C 后续被 Obsidian/Buttons 改动破坏，回退 Plan B 或调研 Buttons 插件源码暴露 API |
 | #3 block-id 解析失败 | 退回"按钮直接散装写"模式（不用 inline 引用） |
 
-### 11.5 已知限制（即使 spike 全过）
+### 11.5 已知限制（v0.1 实际采用 Plan C 后）
 
-- **场景上下文**：`append`/`replace`/`prepend`/`swap`/`template` 等改文本类按钮，可能在面板视图中作用于源笔记本身而不是用户当前编辑的笔记。文档明确建议用户：**v0.1 中只在面板里放上下文无关的按钮**（command / link / URI / QuickAdd command / Templater command / Obsidian Git command）
+- **命令作用对象 = 主区 active 文件**：Focus-Dance Bridge 切换的是 `app.workspace` 的 active leaf，按钮触发的命令（含 QuickAdd / Templater）在执行时读到的 `getActiveFile()` 是**主区那个文件**，不是 Buttons 源笔记。这是面板的设计语义，但用户必须知道："面板里的按钮操作的是主区当前文件"。
+- **位置上下文按钮不可用**：`append`/`prepend`/`replace`/`swap`/`template`/`text`/`remove`/`calculate` 等依赖按钮**所在文件位置**的类型，在面板里调用时 Buttons 插件会去主区 active 文件中找按钮 marker，找不到 → 失败。**v0.1 中只在面板里放上下文无关的按钮**（`command` / `link` / `URI` / QuickAdd command / Templater command / Obsidian Git command）。
+- **主区无 MarkdownView 时按钮被拦截**：用户点击但主区只剩 ItemView（如 file explorer focus 状态），Bridge 弹 Notice 提示打开任意 markdown，按钮 click 不会触达 Buttons 插件，避免 "Could not get Active View" 原生错误。
 
 ---
 
@@ -1513,9 +1549,9 @@ MIT
 
 | # | 风险 | 等级 | 应对 |
 |---|---|---|---|
-| 1 | Buttons 插件 post processor 在自定义 ItemView 不触发 | 高 | Stage 0 spike 验证；失败走 Plan B（嵌入 MarkdownView） |
-| 2 | block-id inline 引用解析失败 | 中 | spike 验证；失败 → 文档建议用户不用 inline 引用 |
-| 3 | `append`/`replace` 类按钮上下文错位 | 中 | 文档说明；建议用户只放上下文无关按钮 |
+| 1 | Buttons 插件 post processor 在自定义 ItemView 不触发 | ~~高~~ → **低**（spike 已验证通过） | Stage 0 spike 完成；渲染层正常，click 层通过 Focus-Dance Bridge 缓解（见 §11.4 Plan C）；伴随上下文相关按钮的明确限制（见 §16.2） |
+| 2 | block-id inline 引用解析失败 | ~~中~~ → **已消解**（spike 通过） | spike 已验证：自定义 ItemView 内 `` `button-id` `` inline 引用渲染为按钮副本 |
+| 3 | `append`/`replace` 类按钮上下文错位 | 中 | 文档说明；建议用户只放上下文无关按钮（v0.1 README + 设置页警示） |
 | 4 | Obsidian 外层 Pane 有内置最小高度 | 低 | `aggressiveLeafCompression` + `:has()` 兜底 |
 | 5 | `:has()` 在某些老主题下视觉副作用 | 低 | 提供 `aggressiveLeafCompression` 开关 |
 | 6 | 用户手动开多实例破坏单实例假设 | 低 | 启动时 `enforceSingleInstance`；运行时不强制 |
@@ -1526,7 +1562,9 @@ MIT
 
 - 仅桌面端
 - 不支持多面板
-- 上下文相关按钮（append / replace 等）行为不保证
+- **命令在主区 active 文件上执行**：面板内按钮通过 Focus-Dance Bridge（§11.4 Plan C）将 active leaf 切到主区最近的 MarkdownView 后再 dispatch；命令读到的 `getActiveFile()` 是主区那个文件，不是 Buttons 源笔记。面板按钮**无法操作 Buttons 源笔记本身**。
+- **主区无 MarkdownView 时按钮被拦截**：Bridge 弹 Notice `error.NO_MAIN_MARKDOWN_VIEW` 阻止 click 冒泡，避免 Buttons 插件原生 "Could not get Active View" 错误。
+- 位置上下文按钮（append / prepend / replace / swap / template / text / remove / calculate）行为不保证 —— 这些类型依赖按钮所在文件，Bridge 会把 active 切到主区，Buttons 插件在错误的文件中查找 marker。
 - 不强制阻止用户手动开多个实例（仅启动时清理）
 - `showOnlyButtons` 模式不支持
 
