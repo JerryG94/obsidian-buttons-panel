@@ -70,6 +70,7 @@ export default {
 		IS_FOLDER: 'Path must point to a Markdown file, not a folder: {detail}',
 		WRONG_TYPE: 'Only .md files are supported: {detail}',
 		BUTTONS_PLUGIN_MISSING: 'Buttons plugin not detected. Buttons may not render. Please install and enable the Buttons plugin.',
+		NO_MAIN_MARKDOWN_VIEW: 'Open a Markdown file in the main pane first — Buttons Panel commands act on the active main-pane file.',
 		actionOpenSettings: 'Open settings',
 		actionRetry: 'Retry',
 		actionOpenCommunityPlugins: 'Open community plugins',

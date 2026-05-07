@@ -70,6 +70,7 @@ export default {
 		IS_FOLDER: '路径必须指向 Markdown 文件，而不是文件夹：{detail}',
 		WRONG_TYPE: '仅支持 .md 文件：{detail}',
 		BUTTONS_PLUGIN_MISSING: '未检测到 Buttons 插件，按钮可能无法正常渲染。请安装并启用 Buttons 插件。',
+		NO_MAIN_MARKDOWN_VIEW: '请先在主编辑区打开一个 Markdown 文件 —— Buttons Panel 的按钮命令作用于主区当前文件。',
 		actionOpenSettings: '打开设置',
 		actionRetry: '重试',
 		actionOpenCommunityPlugins: '打开社区插件',
