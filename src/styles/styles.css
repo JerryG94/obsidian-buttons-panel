@@ -1,1 +1,105 @@
-/* Buttons Panel — styles assembled in M2. */
+/* === 1. CSS variable defaults at view root === */
+.buttons-panel-view {
+	--bp-panel-padding: 6px;
+	--bp-content-gap: 6px;
+	--bp-button-grid-columns: 4;
+	--bp-button-min-width: calc(
+		(100% - (var(--bp-button-grid-columns) - 1) * var(--bp-content-gap))
+		/ var(--bp-button-grid-columns)
+	);
+	--bp-max-panel-height: 0px;
+
+	padding: var(--bp-panel-padding);
+	background: var(--background-secondary);
+	height: auto;
+	min-height: 0;
+	overflow: hidden;
+}
+
+/* maxPanelHeight !== 0: enable scroll */
+.buttons-panel-view[style*="--bp-max-panel-height"]:not([style*="--bp-max-panel-height: 0px"]) {
+	max-height: var(--bp-max-panel-height);
+	overflow-y: auto;
+}
+
+/* === Rendered container === */
+.buttons-panel-view .buttons-panel-rendered {
+	padding: 0 !important;
+	margin: 0 !important;
+	overflow: hidden;
+}
+
+.buttons-panel-view .buttons-panel-rendered .markdown-preview-sizer {
+	min-height: 0 !important;
+	padding: 0 !important;
+	margin: 0 !important;
+}
+
+/* === Auto-fit columns for paragraphs that contain buttons === */
+.buttons-panel-view .buttons-panel-rendered p:has(button),
+.buttons-panel-view .buttons-panel-rendered p:has(.button-default) {
+	display: grid;
+	grid-template-columns: repeat(
+		auto-fit,
+		minmax(var(--bp-button-min-width), 1fr)
+	);
+	gap: var(--bp-content-gap);
+	margin: 0 !important;
+}
+
+/* === Display filters === */
+.buttons-panel-view.bp-hide-headings :is(h1, h2, h3, h4, h5, h6) { display: none; }
+.buttons-panel-view.bp-hide-frontmatter .frontmatter,
+.buttons-panel-view.bp-hide-frontmatter .frontmatter-container { display: none; }
+.buttons-panel-view.bp-hide-inline-title .inline-title { display: none; }
+.buttons-panel-view.bp-hide-paragraphs p:not(:has(button)):not(:has(.button-default)) {
+	display: none;
+}
+.buttons-panel-view.bp-hide-hr hr { display: none; }
+
+/* hideViewHeader (lives outside contentEl) */
+.workspace-leaf-content[data-type="buttons-panel-view"]:has(.bp-hide-view-header) .view-header {
+	display: none;
+}
+
+/* === Outer leaf compression (only when aggressive-compression class is set on the view) === */
+.mod-left-split .workspace-leaf:has(.workspace-leaf-content[data-type="buttons-panel-view"] .bp-aggressive-compression),
+.mod-right-split .workspace-leaf:has(.workspace-leaf-content[data-type="buttons-panel-view"] .bp-aggressive-compression) {
+	flex: 0 0 auto !important;
+	min-height: 0 !important;
+}
+
+/* === Banner (Buttons plugin missing) === */
+.buttons-panel-view .buttons-panel-banner {
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	padding: 4px 6px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	margin-bottom: var(--bp-content-gap);
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+.buttons-panel-view .buttons-panel-banner:empty { display: none; }
+.buttons-panel-view .buttons-panel-banner-action {
+	font-size: var(--font-ui-smaller);
+	padding: 2px 6px;
+}
+
+/* === Error card === */
+.buttons-panel-view .buttons-panel-error-card {
+	padding: 8px;
+	background: var(--background-modifier-error-hover);
+	border-radius: var(--radius-s);
+	font-size: var(--font-ui-small);
+	color: var(--text-error);
+}
+.buttons-panel-view .buttons-panel-error-actions {
+	display: flex;
+	gap: 6px;
+	margin-top: 6px;
+}
+.buttons-panel-view .buttons-panel-error-actions button {
+	font-size: var(--font-ui-smaller);
+	padding: 2px 6px;
+}
