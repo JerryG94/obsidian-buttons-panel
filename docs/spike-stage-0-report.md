@@ -10,7 +10,7 @@
 |---|---|
 | 日期 | 2026-05-07 |
 | 操作系统 | Windows 11 Pro 10.0.26200 |
-| Obsidian 版本 | _待用户补充_（设置 → 关于 → Obsidian 应用版本） |
+| Obsidian 版本 | 1.12.7（安装程序版本 1.12.4） |
 | Buttons 插件版本 | 0.9.13（id `buttons`，作者 shabegom） |
 | 测试 vault | `D:\Documents\Obsidian\JerryG`（用户实际使用的 vault） |
 | 测试笔记（最终版） | `00-系统文档/00-HomePage/侧边按钮.md` |
