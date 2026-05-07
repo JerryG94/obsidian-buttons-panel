@@ -62,7 +62,7 @@ export async function saveSettings(plugin: Plugin & { settings: ButtonsPanelSett
 }
 
 function mergeDefaults<T>(defaults: T, loaded: Partial<T>): T {
-	const out: Record<string, unknown> = Array.isArray(defaults) ? [] : { ...(defaults as object) };
+	const out: Record<string, unknown> = (Array.isArray(defaults) ? [] : { ...(defaults as object) }) as Record<string, unknown>;
 	for (const key of Object.keys(loaded ?? {})) {
 		const dv = (defaults as Record<string, unknown>)[key];
 		const lv = (loaded as Record<string, unknown>)[key];
