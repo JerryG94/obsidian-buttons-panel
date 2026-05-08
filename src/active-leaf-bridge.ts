@@ -33,12 +33,17 @@ export class ActiveLeafBridge {
 		return leaf.view instanceof MarkdownView && leaf.getRoot() === this.app.workspace.rootSplit;
 	}
 
-	private onCaptureClick(evt: MouseEvent): void {
+	primeLastMainLeaf(): boolean {
 		const leaf = this.lastMainLeaf;
 		if (leaf && leaf.view instanceof MarkdownView && leaf.getRoot() === this.app.workspace.rootSplit) {
 			this.app.workspace.setActiveLeaf(leaf, { focus: false });
-			return;
+			return true;
 		}
+		return false;
+	}
+
+	private onCaptureClick(evt: MouseEvent): void {
+		if (this.primeLastMainLeaf()) return;
 		new Notice(t('error.NO_MAIN_MARKDOWN_VIEW'));
 		evt.stopImmediatePropagation();
 		evt.preventDefault();

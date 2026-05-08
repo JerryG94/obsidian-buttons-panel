@@ -27,20 +27,11 @@ export default {
 			left: '左侧',
 			right: '右侧',
 		},
-		aggressiveLeafCompression: {
-			label: '强力压缩外层 Leaf',
-			desc: '使用 :has() 把外层 Leaf 收缩到内容高度。若与主题冲突可关闭。',
-		},
-		maxPanelHeight: {
-			label: '面板最大高度（px）',
-			desc: '0 = 不限制（高度跟随内容）。设为正值时，超出内容会滚动。',
-		},
 		layout: {
-			panelPadding: '面板内边距（px）',
-			contentGap: '内容间距（px）',
+			buttonRowGap: '按钮行间距（px）',
+			buttonColumnGap: '按钮列间距（px）',
 			buttonGridColumns: '按钮目标列数',
-			compactMode: '紧凑模式',
-			hideOverflow: '隐藏溢出',
+			buttonWidth: '按钮固定宽度（px）',
 		},
 		display: {
 			hideViewHeader: '隐藏视图标题栏',

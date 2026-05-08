@@ -5,14 +5,11 @@ export interface ButtonsPanelSettings {
 	version: number;
 	sourceNotePath: string;
 	sidebar: 'left' | 'right';
-	aggressiveLeafCompression: boolean;
-	maxPanelHeight: number;
 	layout: {
-		panelPadding: number;
-		contentGap: number;
+		buttonRowGap: number;
+		buttonColumnGap: number;
 		buttonGridColumns: number;
-		compactMode: boolean;
-		hideOverflow: boolean;
+		buttonWidth: number;
 	};
 	display: {
 		hideViewHeader: boolean;
@@ -30,14 +27,11 @@ export const DEFAULT_SETTINGS: ButtonsPanelSettings = {
 	version: 1,
 	sourceNotePath: '',
 	sidebar: 'left',
-	aggressiveLeafCompression: true,
-	maxPanelHeight: 0,
 	layout: {
-		panelPadding: 6,
-		contentGap: 6,
+		buttonRowGap: 10,
+		buttonColumnGap: 10,
 		buttonGridColumns: 4,
-		compactMode: true,
-		hideOverflow: true,
+		buttonWidth: 0,
 	},
 	display: {
 		hideViewHeader: true,

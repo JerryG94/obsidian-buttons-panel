@@ -9,3 +9,5 @@ node_modules/
 coverage/
 dist/
 Buttons_Panel_PRD.md
+.omc/
+.omx/

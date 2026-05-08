@@ -2,10 +2,10 @@ import type { ButtonsPanelSettings } from './settings';
 
 export function applyStyleVars(rootEl: HTMLElement, settings: ButtonsPanelSettings): void {
 	const s = rootEl.style;
-	s.setProperty('--bp-panel-padding', `${settings.layout.panelPadding}px`);
-	s.setProperty('--bp-content-gap', `${settings.layout.contentGap}px`);
+	s.setProperty('--bp-button-row-gap', `${settings.layout.buttonRowGap}px`);
+	s.setProperty('--bp-button-column-gap', `${settings.layout.buttonColumnGap}px`);
 	s.setProperty('--bp-button-grid-columns', `${settings.layout.buttonGridColumns}`);
-	s.setProperty('--bp-max-panel-height', `${settings.maxPanelHeight}px`);
+	s.setProperty('--bp-button-width', settings.layout.buttonWidth > 0 ? `${settings.layout.buttonWidth}px` : '100%');
 }
 
 export function applyDisplayFilterClasses(rootEl: HTMLElement, settings: ButtonsPanelSettings): void {
@@ -16,7 +16,4 @@ export function applyDisplayFilterClasses(rootEl: HTMLElement, settings: Buttons
 	cls.toggle('bp-hide-headings', settings.display.hideHeadings);
 	cls.toggle('bp-hide-paragraphs', settings.display.hideParagraphs);
 	cls.toggle('bp-hide-hr', settings.display.hideHr);
-	cls.toggle('bp-aggressive-compression', settings.aggressiveLeafCompression);
-	cls.toggle('bp-compact-mode', settings.layout.compactMode);
-	cls.toggle('bp-hide-overflow', settings.layout.hideOverflow);
 }

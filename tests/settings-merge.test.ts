@@ -15,20 +15,21 @@ describe('mergeDefaults', () => {
 	});
 
 	it('keeps default sub-tree when only one nested field is provided', () => {
-		const out = mergeDefaults(DEFAULT_SETTINGS, { layout: { panelPadding: 20 } } as any);
-		expect(out.layout.panelPadding).toBe(20);
-		expect(out.layout.contentGap).toBe(DEFAULT_SETTINGS.layout.contentGap);
+		const out = mergeDefaults(DEFAULT_SETTINGS, { layout: { buttonRowGap: 20 } } as any);
+		expect(out.layout.buttonRowGap).toBe(20);
 		expect(out.layout.buttonGridColumns).toBe(DEFAULT_SETTINGS.layout.buttonGridColumns);
+		expect(out.layout.buttonColumnGap).toBe(DEFAULT_SETTINGS.layout.buttonColumnGap);
+		expect(out.layout.buttonWidth).toBe(DEFAULT_SETTINGS.layout.buttonWidth);
 	});
 
 	it('preserves explicit `false` for boolean fields', () => {
-		const out = mergeDefaults(DEFAULT_SETTINGS, { aggressiveLeafCompression: false });
-		expect(out.aggressiveLeafCompression).toBe(false);
+		const out = mergeDefaults(DEFAULT_SETTINGS, { autoRefresh: false });
+		expect(out.autoRefresh).toBe(false);
 	});
 
 	it('preserves explicit `0` for number fields', () => {
-		const out = mergeDefaults(DEFAULT_SETTINGS, { maxPanelHeight: 0 });
-		expect(out.maxPanelHeight).toBe(0);
+		const out = mergeDefaults(DEFAULT_SETTINGS, { layout: { buttonWidth: 0 } } as any);
+		expect(out.layout.buttonWidth).toBe(0);
 	});
 
 	// Regression guard: a corrupted user file with `null` where an object is expected
@@ -41,7 +42,7 @@ describe('mergeDefaults', () => {
 
 	it('does not mutate the defaults object', () => {
 		const before = JSON.stringify(DEFAULT_SETTINGS);
-		mergeDefaults(DEFAULT_SETTINGS, { sourceNotePath: 'a.md', layout: { panelPadding: 99 } } as any);
+		mergeDefaults(DEFAULT_SETTINGS, { sourceNotePath: 'a.md', layout: { buttonRowGap: 99 } } as any);
 		expect(JSON.stringify(DEFAULT_SETTINGS)).toBe(before);
 	});
 });

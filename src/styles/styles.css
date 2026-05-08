@@ -1,38 +1,69 @@
 /* === 1. CSS variable defaults at view root === */
 .buttons-panel-view {
-	--bp-panel-padding: 6px;
-	--bp-content-gap: 6px;
+	--bp-button-row-gap: 10px;
+	--bp-button-column-gap: 10px;
 	--bp-button-grid-columns: 4;
 	--bp-button-min-width: calc(
-		(100% - (var(--bp-button-grid-columns) - 1) * var(--bp-content-gap))
+		(100% - (var(--bp-button-grid-columns) - 1) * var(--bp-button-column-gap))
 		/ var(--bp-button-grid-columns)
 	);
-	--bp-max-panel-height: 0px;
+	--bp-button-width: 100%;
 
-	padding: var(--bp-panel-padding);
+	padding: 10px;
 	background: var(--background-secondary);
 	height: auto;
 	min-height: 0;
-	overflow: hidden;
+	overflow: visible;
 }
 
-/* maxPanelHeight !== 0: enable scroll */
-.buttons-panel-view[style*="--bp-max-panel-height"]:not([style*="--bp-max-panel-height: 0px"]) {
-	max-height: var(--bp-max-panel-height);
-	overflow-y: auto;
+/* 防御：永远不让面板内容因 height/visibility 全部不可见。
+   注意 .buttons-panel-rendered 自身可以为空（正常状态），
+   但面板根 contentEl 必须至少保持可见。 */
+.workspace-leaf-content[data-type="buttons-panel-view"] .view-content {
+	display: block !important;
+	visibility: visible !important;
+	height: auto !important;
+	min-height: 0 !important;
 }
 
 /* === Rendered container === */
 .buttons-panel-view .buttons-panel-rendered {
 	padding: 0 !important;
 	margin: 0 !important;
-	overflow: hidden;
+	overflow: visible;
 }
 
-.buttons-panel-view .buttons-panel-rendered .markdown-preview-sizer {
+/* MarkdownRenderer.render() 在容器内部可能生成 .markdown-preview-view 或
+   .markdown-rendered 等包装层，其默认 height:100% 在 height:auto 父元素内
+   会解析为 0，导致内容不可见。强制改为 auto。 */
+.buttons-panel-view .buttons-panel-rendered .markdown-preview-view,
+.buttons-panel-view .buttons-panel-rendered .markdown-rendered {
+	height: auto !important;
+	min-height: 0 !important;
+	overflow: visible !important;
+	display: block !important;
+	padding: 0 !important;
+	padding-bottom: 0 !important;
+}
+
+.buttons-panel-view .buttons-panel-rendered .markdown-preview-sizer,
+.buttons-panel-view .buttons-panel-rendered .markdown-preview-section {
+	height: auto !important;
 	min-height: 0 !important;
 	padding: 0 !important;
+	padding-bottom: 0 !important;
 	margin: 0 !important;
+	display: block !important;
+}
+
+.buttons-panel-view .buttons-panel-rendered .markdown-preview-pusher {
+	display: none !important;
+}
+
+/* 渲染种子：仅供诊断，零高度不可见但 DOM 留痕。 */
+.buttons-panel-view .buttons-panel-render-seed {
+	height: 0;
+	overflow: hidden;
 }
 
 /* === Auto-fit columns for paragraphs that contain buttons === */
@@ -43,8 +74,44 @@
 		auto-fit,
 		minmax(var(--bp-button-min-width), 1fr)
 	);
-	gap: var(--bp-content-gap);
+	column-gap: var(--bp-button-column-gap);
+	row-gap: var(--bp-button-row-gap);
+	align-items: stretch;
 	margin: 0 !important;
+}
+
+/* Uniform button width and height within each grid cell */
+.buttons-panel-view .buttons-panel-rendered button,
+.buttons-panel-view .buttons-panel-rendered .button-default,
+.buttons-panel-view .buttons-panel-rescue button,
+.buttons-panel-view .buttons-panel-rescue .button-default {
+	width: var(--bp-button-width) !important;
+	box-sizing: border-box !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	justify-self: center !important;
+	text-align: center !important;
+}
+
+/* 兜底：未替换的 inline-button 占位 <code> 段落，至少展示原始文本，
+   而不是被 hide-paragraphs 之类的规则全部清掉。 */
+.buttons-panel-view .buttons-panel-rendered p:has(code) {
+	display: block;
+	margin: 0 0 4px 0 !important;
+}
+
+/* Buttons rescued after Buttons plugin moves them to its hidden registry */
+.buttons-panel-view .buttons-panel-rescue {
+	display: grid;
+	grid-template-columns: repeat(
+		auto-fit,
+		minmax(var(--bp-button-min-width), 1fr)
+	);
+	column-gap: var(--bp-button-column-gap);
+	row-gap: var(--bp-button-row-gap);
+	align-items: stretch;
+	margin-top: var(--bp-button-row-gap);
 }
 
 /* === Display filters === */
@@ -52,21 +119,26 @@
 .buttons-panel-view.bp-hide-frontmatter .frontmatter,
 .buttons-panel-view.bp-hide-frontmatter .frontmatter-container { display: none; }
 .buttons-panel-view.bp-hide-inline-title .inline-title { display: none; }
-.buttons-panel-view.bp-hide-paragraphs p:not(:has(button)):not(:has(.button-default)) {
+/* 只隐藏既不含按钮、也不含 inline-button 占位 code 的段落，
+   防止异步替换前的窗口期把所有按钮段落都隐藏掉。 */
+.buttons-panel-view.bp-hide-paragraphs
+	p:not(:has(button)):not(:has(.button-default)):not(:has(code)) {
 	display: none;
 }
 .buttons-panel-view.bp-hide-hr hr { display: none; }
 
+/* 防御：面板内主动剥离来自源笔记 frontmatter 的 cssclasses 影响
+   （比如用户的 home-single-component 主题片段会全局隐藏 h1~h6 / mod-header）。
+   MarkdownRenderer.render 不会自动应用 cssclasses，但有些主题用 :root 或
+   裸标签选择器全局生效；这里把面板内的标题恢复为 revert，确保需要时可见。
+   注意：bp-hide-headings 在上面已显式 display:none，会覆盖此 revert。 */
+.buttons-panel-view :is(h1, h2, h3, h4, h5, h6) {
+	display: revert;
+}
+
 /* hideViewHeader (lives outside contentEl) */
 .workspace-leaf-content[data-type="buttons-panel-view"]:has(.bp-hide-view-header) .view-header {
 	display: none;
-}
-
-/* === Outer leaf compression (only when aggressive-compression class is set on the view) === */
-.mod-left-split .workspace-leaf:has(.workspace-leaf-content[data-type="buttons-panel-view"] .bp-aggressive-compression),
-.mod-right-split .workspace-leaf:has(.workspace-leaf-content[data-type="buttons-panel-view"] .bp-aggressive-compression) {
-	flex: 0 0 auto !important;
-	min-height: 0 !important;
 }
 
 /* === Banner (Buttons plugin missing) === */
@@ -75,7 +147,7 @@
 	color: var(--text-muted);
 	padding: 4px 6px;
 	border-bottom: 1px solid var(--background-modifier-border);
-	margin-bottom: var(--bp-content-gap);
+	margin-bottom: 8px;
 	display: flex;
 	gap: 6px;
 	align-items: center;
@@ -93,6 +165,16 @@
 	border-radius: var(--radius-s);
 	font-size: var(--font-ui-small);
 	color: var(--text-error);
+	display: block !important;
+	visibility: visible !important;
+}
+.buttons-panel-view .buttons-panel-error-card pre {
+	white-space: pre-wrap;
+	word-break: break-all;
+	font-size: var(--font-ui-smaller);
+	margin: 4px 0 0 0;
+	max-height: 200px;
+	overflow: auto;
 }
 .buttons-panel-view .buttons-panel-error-actions {
 	display: flex;
@@ -102,4 +184,23 @@
 .buttons-panel-view .buttons-panel-error-actions button {
 	font-size: var(--font-ui-smaller);
 	padding: 2px 6px;
+}
+
+/* === Debug strip === */
+/* 默认隐藏；只有在 Obsidian 控制台执行
+   document.body.classList.add('bp-debug-on')
+   时才显示。这样既保留诊断 DOM，又不打扰正常使用。 */
+.buttons-panel-view .buttons-panel-debug {
+	display: none;
+	font-size: 10px;
+	color: var(--text-faint);
+	padding: 2px 4px;
+	border-top: 1px dashed var(--background-modifier-border);
+	margin-top: 4px;
+	font-family: var(--font-monospace);
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+body.bp-debug-on .buttons-panel-view .buttons-panel-debug {
+	display: block;
 }

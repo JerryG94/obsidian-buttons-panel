@@ -37,13 +37,10 @@ export class ButtonsPanelSettingTab extends PluginSettingTab {
 		this.sidebarSetting();
 
 		this.section('settings.sectionLayout');
-		this.toggleSetting('aggressiveLeafCompression', 'settings.aggressiveLeafCompression');
-		this.numberSetting('maxPanelHeight', 'settings.maxPanelHeight', 0, 1000);
-		this.numberSubSetting(['layout', 'panelPadding'], 'settings.layout.panelPadding', 0, 64);
-		this.numberSubSetting(['layout', 'contentGap'], 'settings.layout.contentGap', 0, 64);
+		this.numberSubSetting(['layout', 'buttonRowGap'], 'settings.layout.buttonRowGap', 0, 64);
+		this.numberSubSetting(['layout', 'buttonColumnGap'], 'settings.layout.buttonColumnGap', 0, 64);
 		this.numberSubSetting(['layout', 'buttonGridColumns'], 'settings.layout.buttonGridColumns', 1, 12);
-		this.toggleSubSetting(['layout', 'compactMode'], 'settings.layout.compactMode');
-		this.toggleSubSetting(['layout', 'hideOverflow'], 'settings.layout.hideOverflow');
+		this.numberSubSetting(['layout', 'buttonWidth'], 'settings.layout.buttonWidth', 0, 400);
 
 		this.section('settings.sectionDisplay');
 		this.toggleSubSetting(['display', 'hideViewHeader'], 'settings.display.hideViewHeader');
@@ -107,7 +104,7 @@ export class ButtonsPanelSettingTab extends PluginSettingTab {
 				}));
 	}
 
-	private toggleSetting<K extends 'aggressiveLeafCompression' | 'autoRefresh' | 'openOnStartup'>(
+	private toggleSetting<K extends 'autoRefresh' | 'openOnStartup'>(
 		key: K, labelKey: string,
 	): void {
 		new Setting(this.containerEl)
@@ -121,20 +118,7 @@ export class ButtonsPanelSettingTab extends PluginSettingTab {
 				}));
 	}
 
-	private numberSetting<K extends 'maxPanelHeight'>(key: K, labelKey: string, min: number, max: number): void {
-		new Setting(this.containerEl)
-			.setName(t(`${labelKey}.label`))
-			.setDesc(t(`${labelKey}.desc`))
-			.addText((text) => text
-				.setValue(String(this.plugin.settings[key]))
-				.onChange(async (v) => {
-					const n = clamp(parseInt(v, 10) || 0, min, max);
-					(this.plugin.settings[key] as number) = n;
-					await this.plugin.saveSettings();
-				}));
-	}
-
-	private toggleSubSetting(path: ['layout' | 'display', string], labelKey: string): void {
+	private toggleSubSetting(path: ['display', string], labelKey: string): void {
 		const [group, k] = path;
 		new Setting(this.containerEl)
 			.setName(t(labelKey))

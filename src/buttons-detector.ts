@@ -14,8 +14,10 @@ export class ButtonsDetector {
 
 	refresh(): boolean {
 		const before = this.cached;
-		this.cached = this.detect();
-		return before !== this.cached;
+		const next = this.detect();
+		this.cached = next;
+		// null 是初始状态，不计为"状态变化"，避免首次 layout-change 触发虚假的 refreshAllViews。
+		return before !== null && before !== next;
 	}
 
 	private detect(): boolean {

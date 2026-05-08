@@ -27,20 +27,11 @@ export default {
 			left: 'Left',
 			right: 'Right',
 		},
-		aggressiveLeafCompression: {
-			label: 'Aggressive leaf compression',
-			desc: 'Use :has() to shrink the outer Leaf to fit content. Disable if your theme conflicts.',
-		},
-		maxPanelHeight: {
-			label: 'Max panel height (px)',
-			desc: '0 = unlimited (panel sizes to content). When set, overflowing content scrolls.',
-		},
 		layout: {
-			panelPadding: 'Panel padding (px)',
-			contentGap: 'Content gap (px)',
+			buttonRowGap: 'Button row gap (px)',
+			buttonColumnGap: 'Button column gap (px)',
 			buttonGridColumns: 'Target button columns',
-			compactMode: 'Compact mode',
-			hideOverflow: 'Hide overflow',
+			buttonWidth: 'Button fixed width (px)',
 		},
 		display: {
 			hideViewHeader: 'Hide view header',

@@ -46,6 +46,8 @@ export default class ButtonsPanelPlugin extends Plugin {
 	}
 
 	refreshAllViews(): void {
+		const _caller = new Error().stack?.split('\n').slice(1, 4).join(' | ') ?? '?';
+		console.log('[bp] refreshAllViews() called |', _caller);
 		for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE_BUTTONS_PANEL)) {
 			const view = leaf.view;
 			if (view instanceof ButtonsPanelView) void view.refresh();
@@ -99,6 +101,7 @@ export default class ButtonsPanelPlugin extends Plugin {
 
 	private onLayoutChange(): void {
 		const changed = this.detector.refresh();
+		console.log('[bp] onLayoutChange(): detector.refresh()=', changed);
 		if (changed) this.refreshAllViews();
 	}
 
