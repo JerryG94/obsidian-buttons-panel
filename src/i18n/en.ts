@@ -28,6 +28,7 @@ export default {
 			right: 'Right',
 		},
 		layout: {
+			panelPadding: 'Panel padding (px)',
 			buttonRowGap: 'Button row gap (px)',
 			buttonColumnGap: 'Button column gap (px)',
 			buttonGridColumns: 'Target button columns',

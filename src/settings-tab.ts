@@ -37,6 +37,7 @@ export class ButtonsPanelSettingTab extends PluginSettingTab {
 		this.sidebarSetting();
 
 		this.section('settings.sectionLayout');
+		this.numberSubSetting(['layout', 'panelPadding'], 'settings.layout.panelPadding', 0, 48);
 		this.numberSubSetting(['layout', 'buttonRowGap'], 'settings.layout.buttonRowGap', 0, 64);
 		this.numberSubSetting(['layout', 'buttonColumnGap'], 'settings.layout.buttonColumnGap', 0, 64);
 		this.numberSubSetting(['layout', 'buttonGridColumns'], 'settings.layout.buttonGridColumns', 1, 12);

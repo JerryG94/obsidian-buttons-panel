@@ -15,15 +15,18 @@ describe('applyStyleVars', () => {
 			...DEFAULT_SETTINGS,
 			layout: {
 				...DEFAULT_SETTINGS.layout,
+				panelPadding: 16,
 				buttonRowGap: 14,
 				buttonColumnGap: 10,
 				buttonWidth: 120,
 			},
 		});
 
+		expect(props.get('--bp-panel-padding')).toBe('16px');
 		expect(props.get('--bp-button-row-gap')).toBe('14px');
 		expect(props.get('--bp-button-column-gap')).toBe('10px');
 		expect(props.get('--bp-button-width')).toBe('120px');
+		expect(props.get('--bp-button-grid-template-columns')).toBe('repeat(4, 120px)');
 		expect(props.has('--bp-max-panel-height')).toBe(false);
 	});
 
@@ -44,5 +47,6 @@ describe('applyStyleVars', () => {
 		});
 
 		expect(props.get('--bp-button-width')).toBe('100%');
+		expect(props.get('--bp-button-grid-template-columns')).toBe('repeat(auto-fit, minmax(var(--bp-button-min-width), 1fr))');
 	});
 });

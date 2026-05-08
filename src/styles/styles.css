@@ -1,5 +1,6 @@
 /* === 1. CSS variable defaults at view root === */
 .buttons-panel-view {
+	--bp-panel-padding: 14px;
 	--bp-button-row-gap: 10px;
 	--bp-button-column-gap: 10px;
 	--bp-button-grid-columns: 4;
@@ -8,9 +9,13 @@
 		/ var(--bp-button-grid-columns)
 	);
 	--bp-button-width: 100%;
+	--bp-button-grid-template-columns: repeat(
+		auto-fit,
+		minmax(var(--bp-button-min-width), 1fr)
+	);
 
-	padding: 10px;
 	background: var(--background-secondary);
+	box-sizing: border-box;
 	height: auto;
 	min-height: 0;
 	overflow: visible;
@@ -24,6 +29,8 @@
 	visibility: visible !important;
 	height: auto !important;
 	min-height: 0 !important;
+	padding: var(--bp-panel-padding) !important;
+	box-sizing: border-box !important;
 }
 
 /* === Rendered container === */
@@ -70,13 +77,11 @@
 .buttons-panel-view .buttons-panel-rendered p:has(button),
 .buttons-panel-view .buttons-panel-rendered p:has(.button-default) {
 	display: grid;
-	grid-template-columns: repeat(
-		auto-fit,
-		minmax(var(--bp-button-min-width), 1fr)
-	);
+	grid-template-columns: var(--bp-button-grid-template-columns);
 	column-gap: var(--bp-button-column-gap);
 	row-gap: var(--bp-button-row-gap);
 	align-items: stretch;
+	justify-content: center;
 	margin: 0 !important;
 }
 
@@ -104,13 +109,11 @@
 /* Buttons rescued after Buttons plugin moves them to its hidden registry */
 .buttons-panel-view .buttons-panel-rescue {
 	display: grid;
-	grid-template-columns: repeat(
-		auto-fit,
-		minmax(var(--bp-button-min-width), 1fr)
-	);
+	grid-template-columns: var(--bp-button-grid-template-columns);
 	column-gap: var(--bp-button-column-gap);
 	row-gap: var(--bp-button-row-gap);
 	align-items: stretch;
+	justify-content: center;
 	margin-top: var(--bp-button-row-gap);
 }
 

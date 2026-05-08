@@ -6,6 +6,7 @@ export interface ButtonsPanelSettings {
 	sourceNotePath: string;
 	sidebar: 'left' | 'right';
 	layout: {
+		panelPadding: number;
 		buttonRowGap: number;
 		buttonColumnGap: number;
 		buttonGridColumns: number;
@@ -28,6 +29,7 @@ export const DEFAULT_SETTINGS: ButtonsPanelSettings = {
 	sourceNotePath: '',
 	sidebar: 'left',
 	layout: {
+		panelPadding: 14,
 		buttonRowGap: 10,
 		buttonColumnGap: 10,
 		buttonGridColumns: 4,

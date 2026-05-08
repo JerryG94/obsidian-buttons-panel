@@ -28,6 +28,7 @@ export default {
 			right: '右侧',
 		},
 		layout: {
+			panelPadding: '面板内边距（px）',
 			buttonRowGap: '按钮行间距（px）',
 			buttonColumnGap: '按钮列间距（px）',
 			buttonGridColumns: '按钮目标列数',
