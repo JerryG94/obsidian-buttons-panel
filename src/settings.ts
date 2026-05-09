@@ -6,7 +6,9 @@ export interface ButtonsPanelSettings {
 	sourceNotePath: string;
 	sidebar: 'left' | 'right';
 	layout: {
+		panelHeight: number;
 		panelPadding: number;
+		buttonHeight: number;
 		buttonRowGap: number;
 		buttonColumnGap: number;
 		buttonGridColumns: number;
@@ -29,7 +31,9 @@ export const DEFAULT_SETTINGS: ButtonsPanelSettings = {
 	sourceNotePath: '',
 	sidebar: 'left',
 	layout: {
+		panelHeight: 160,
 		panelPadding: 14,
+		buttonHeight: 48,
 		buttonRowGap: 10,
 		buttonColumnGap: 10,
 		buttonGridColumns: 4,
@@ -50,7 +54,7 @@ export const DEFAULT_SETTINGS: ButtonsPanelSettings = {
 export async function loadSettings(plugin: Plugin): Promise<ButtonsPanelSettings> {
 	const raw = (await plugin.loadData()) ?? {};
 	const migrated = runMigrations(raw);
-	return mergeDefaults(DEFAULT_SETTINGS, migrated);
+	return normalizeSettings(mergeDefaults(DEFAULT_SETTINGS, migrated));
 }
 
 export async function saveSettings(plugin: Plugin & { settings: ButtonsPanelSettings }): Promise<void> {
@@ -70,4 +74,22 @@ export function mergeDefaults<T>(defaults: T, loaded: Partial<T>): T {
 		}
 	}
 	return out as T;
+}
+
+export function normalizeSettings(settings: ButtonsPanelSettings): ButtonsPanelSettings {
+	return {
+		...settings,
+		layout: {
+			...settings.layout,
+			panelHeight: Math.max(0, settings.layout.panelHeight),
+			panelPadding: Math.max(0, settings.layout.panelPadding),
+			buttonHeight: settings.layout.buttonHeight > 0
+				? settings.layout.buttonHeight
+				: DEFAULT_SETTINGS.layout.buttonHeight,
+			buttonRowGap: Math.max(0, settings.layout.buttonRowGap),
+			buttonColumnGap: Math.max(0, settings.layout.buttonColumnGap),
+			buttonGridColumns: Math.max(1, settings.layout.buttonGridColumns),
+			buttonWidth: Math.max(0, settings.layout.buttonWidth),
+		},
+	};
 }

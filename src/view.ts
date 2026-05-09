@@ -2,7 +2,7 @@ import { ItemView, WorkspaceLeaf } from 'obsidian';
 import type ButtonsPanelPlugin from '../main';
 import { Renderer } from './renderer';
 import { resolve } from './path-resolver';
-import { applyDisplayFilterClasses, applyStyleVars } from './style-vars';
+import { applyDisplayFilterClasses, applyHostStyleVars, applyStyleVars } from './style-vars';
 import { debounce } from './debounce';
 import { t } from './i18n';
 import { ActiveLeafBridge } from './active-leaf-bridge';
@@ -17,6 +17,7 @@ export class ButtonsPanelView extends ItemView {
 	private renderer!: Renderer;
 	private bridge!: ActiveLeafBridge;
 	private debouncedRefresh!: () => void;
+	private layoutObserver: MutationObserver | null = null;
 
 	constructor(leaf: WorkspaceLeaf, private readonly plugin: ButtonsPanelPlugin) {
 		super(leaf);
@@ -38,6 +39,7 @@ export class ButtonsPanelView extends ItemView {
 			this.errorEl = this.contentEl.createDiv({ cls: 'buttons-panel-error' });
 			this.renderedEl = this.contentEl.createDiv({ cls: 'buttons-panel-rendered' });
 			this.debugEl = this.contentEl.createDiv({ cls: 'buttons-panel-debug' });
+			this.observeLayoutInputs();
 
 			// 永远可见的诊断标记：证明 onOpen 已经执行；display 由 styles.css 控制
 			// （默认隐藏，加 .bp-debug-on 可以显示）。即便隐藏，DOM 在审查器里也能看到。
@@ -68,12 +70,16 @@ export class ButtonsPanelView extends ItemView {
 	}
 
 	async onClose(): Promise<void> {
+		this.layoutObserver?.disconnect();
+		this.layoutObserver = null;
 		this.renderer.dispose();
 		/* listener teardown handled via host.register in bridge */
 	}
 
 	applySettingsToDom(): void {
-		applyStyleVars(this.contentEl, this.plugin.settings);
+		const buttonCount = this.countLayoutButtons();
+		applyStyleVars(this.contentEl, this.plugin.settings, buttonCount);
+		applyHostStyleVars(this.contentEl, this.plugin.settings, buttonCount);
 		applyDisplayFilterClasses(this.contentEl, this.plugin.settings);
 	}
 
@@ -108,6 +114,7 @@ export class ButtonsPanelView extends ItemView {
 			try {
 				await this.renderer.renderMarkdown(this.renderedEl, result.file);
 				this.bridge.primeLastMainLeaf();
+				this.applySettingsToDom();
 				this.updateDebug(`rendered ${result.file.path}`);
 			} catch (e) {
 				console.error('[buttons-panel] renderMarkdown failed:', e);
@@ -137,6 +144,32 @@ export class ButtonsPanelView extends ItemView {
 		if (this.debugEl) {
 			this.debugEl.setText(`[bp] ${new Date().toLocaleTimeString()} | ${extra}`);
 		}
+	}
+
+	private observeLayoutInputs(): void {
+		this.layoutObserver?.disconnect();
+		this.layoutObserver = new MutationObserver(() => this.applySettingsToDom());
+		this.layoutObserver.observe(this.renderedEl, {
+			attributes: true,
+			childList: true,
+			subtree: true,
+		});
+	}
+
+	private countLayoutButtons(): number | undefined {
+		if (!this.renderedEl) return undefined;
+		const buttonEls = new Set<HTMLElement>();
+		for (const el of Array.from(this.renderedEl.querySelectorAll('button, .button-default'))) {
+			buttonEls.add(el as HTMLElement);
+		}
+		if (buttonEls.size > 0) return buttonEls.size;
+
+		let inlineCodeCount = 0;
+		for (const codeEl of Array.from(this.renderedEl.querySelectorAll('code'))) {
+			const text = codeEl.textContent?.trim() ?? '';
+			if (/^button-[\w-]+$/i.test(text)) inlineCodeCount++;
+		}
+		return inlineCodeCount > 0 ? inlineCodeCount : undefined;
 	}
 
 	private updateBanner(): void {

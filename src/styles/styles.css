@@ -1,9 +1,15 @@
 /* === 1. CSS variable defaults at view root === */
 .buttons-panel-view {
 	--bp-panel-padding: 14px;
+	--bp-effective-panel-padding: 14px;
+	--bp-fixed-panel-height: 160px;
+	--bp-host-chrome-height: 40px;
+	--bp-fixed-host-height: 200px;
+	--bp-button-height: 48px;
 	--bp-button-row-gap: 10px;
 	--bp-button-column-gap: 10px;
 	--bp-button-grid-columns: 4;
+	--bp-button-rows: 2;
 	--bp-button-min-width: calc(
 		(100% - (var(--bp-button-grid-columns) - 1) * var(--bp-button-column-gap))
 		/ var(--bp-button-grid-columns)
@@ -29,8 +35,51 @@
 	visibility: visible !important;
 	height: auto !important;
 	min-height: 0 !important;
-	padding: var(--bp-panel-padding) !important;
+	padding: var(--bp-effective-panel-padding) var(--bp-panel-padding) !important;
 	box-sizing: border-box !important;
+}
+
+/* Keep the Obsidian sidebar tab that hosts this view at the intended compact size.
+   The selector is scoped to sidebars and this view type so other sidebar tabs keep
+   their normal Obsidian sizing behavior. */
+.workspace-split:is(.mod-left-split, .mod-right-split)
+	.workspace-tabs:has(.workspace-leaf-content[data-type="buttons-panel-view"]) {
+	--bp-fixed-panel-height: 160px;
+	--bp-host-chrome-height: 40px;
+	--bp-fixed-host-height: 200px;
+	flex: 0 0 var(--bp-fixed-host-height) !important;
+	flex-basis: var(--bp-fixed-host-height) !important;
+	height: var(--bp-fixed-host-height) !important;
+	min-height: var(--bp-fixed-host-height) !important;
+	max-height: var(--bp-fixed-host-height) !important;
+	overflow: hidden !important;
+}
+
+.workspace-split:is(.mod-left-split, .mod-right-split)
+	.workspace-tabs:has(.workspace-leaf-content[data-type="buttons-panel-view"])
+	.workspace-tab-container {
+	height: calc(100% - var(--bp-host-chrome-height)) !important;
+	min-height: 0 !important;
+	max-height: calc(100% - var(--bp-host-chrome-height)) !important;
+	flex: 1 1 auto !important;
+	overflow: hidden !important;
+}
+
+.workspace-split:is(.mod-left-split, .mod-right-split)
+	.workspace-leaf-content[data-type="buttons-panel-view"] {
+	height: 100% !important;
+	min-height: 0 !important;
+	max-height: 100% !important;
+	overflow: hidden !important;
+}
+
+.workspace-split:is(.mod-left-split, .mod-right-split)
+	.workspace-leaf-content[data-type="buttons-panel-view"]
+	.view-content.buttons-panel-view {
+	height: 100% !important;
+	min-height: 0 !important;
+	max-height: 100% !important;
+	overflow: hidden !important;
 }
 
 /* === Rendered container === */
@@ -91,6 +140,11 @@
 .buttons-panel-view .buttons-panel-rescue button,
 .buttons-panel-view .buttons-panel-rescue .button-default {
 	width: var(--bp-button-width) !important;
+	height: var(--bp-button-height) !important;
+	min-height: var(--bp-button-height) !important;
+	max-height: var(--bp-button-height) !important;
+	padding-top: 0 !important;
+	padding-bottom: 0 !important;
 	box-sizing: border-box !important;
 	display: flex !important;
 	align-items: center !important;
