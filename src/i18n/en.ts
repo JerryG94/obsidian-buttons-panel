@@ -28,11 +28,13 @@ export default {
 			right: 'Right',
 		},
 		layout: {
+			panelHeight: 'Panel height (px, 0 = auto)',
 			panelPadding: 'Panel padding (px)',
+			buttonHeight: 'Button height (px)',
 			buttonRowGap: 'Button row gap (px)',
 			buttonColumnGap: 'Button column gap (px)',
 			buttonGridColumns: 'Target button columns',
-			buttonWidth: 'Button fixed width (px)',
+			buttonWidth: 'Button width (px, 0 = auto)',
 		},
 		display: {
 			hideViewHeader: 'Hide view header',

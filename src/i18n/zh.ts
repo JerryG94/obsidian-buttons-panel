@@ -28,11 +28,13 @@ export default {
 			right: '右侧',
 		},
 		layout: {
+			panelHeight: '面板高度（px，0 = 自动）',
 			panelPadding: '面板内边距（px）',
+			buttonHeight: '按钮高度（px）',
 			buttonRowGap: '按钮行间距（px）',
 			buttonColumnGap: '按钮列间距（px）',
 			buttonGridColumns: '按钮目标列数',
-			buttonWidth: '按钮固定宽度（px）',
+			buttonWidth: '按钮宽度（px，0 = 自动）',
 		},
 		display: {
 			hideViewHeader: '隐藏视图标题栏',

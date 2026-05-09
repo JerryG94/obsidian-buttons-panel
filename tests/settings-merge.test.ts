@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mergeDefaults, DEFAULT_SETTINGS } from '../src/settings';
+import { mergeDefaults, normalizeSettings, DEFAULT_SETTINGS } from '../src/settings';
 
 describe('mergeDefaults', () => {
 	it('returns defaults when loaded is empty', () => {
@@ -29,6 +29,17 @@ describe('mergeDefaults', () => {
 
 	it('preserves explicit `0` for number fields', () => {
 		const out = mergeDefaults(DEFAULT_SETTINGS, { layout: { buttonWidth: 0 } } as any);
+		expect(out.layout.buttonWidth).toBe(0);
+	});
+
+	it('normalizes invalid button height while preserving automatic button width', () => {
+		const out = normalizeSettings(mergeDefaults(DEFAULT_SETTINGS, {
+			layout: {
+				buttonHeight: 0,
+				buttonWidth: 0,
+			},
+		} as any));
+		expect(out.layout.buttonHeight).toBe(DEFAULT_SETTINGS.layout.buttonHeight);
 		expect(out.layout.buttonWidth).toBe(0);
 	});
 

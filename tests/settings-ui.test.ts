@@ -15,7 +15,9 @@ describe('settings ui surface', () => {
 	});
 
 	it('keeps only visible button layout controls in layout settings', () => {
+		expect(settingsTab).toContain('settings.layout.panelHeight');
 		expect(settingsTab).toContain('settings.layout.panelPadding');
+		expect(settingsTab).toContain('settings.layout.buttonHeight');
 		expect(settingsTab).toContain('settings.layout.buttonRowGap');
 		expect(settingsTab).toContain('settings.layout.buttonColumnGap');
 		expect(settingsTab).toContain('settings.layout.buttonGridColumns');
